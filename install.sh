@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# install some library
 read systemInfo < /etc/issue
 systemInfo=${systemInfo%% *}
 if [ "$systemInfo" = "Ubuntu" ]; then
@@ -40,6 +41,7 @@ echo -n "{\n \
 
 # install boost
 wget https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz
+tar jxvf boost_1_64_0.tar.bz
 cd boost_1_64_0
 ./bootstrap.sh
 ./b2 install
