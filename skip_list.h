@@ -19,7 +19,7 @@ protected:
   typedef skip_list_node<K, V> Node;
   typedef Node* pNode;
 public:
-  skip_list(int max_level);
+  skip_list(int max_level = 15);
   ~skip_list();
   
   bool insert(key_type key);
@@ -59,7 +59,7 @@ bool skip_list<K, V>::insert(key_type key) {
 
 template<typename K, typename V>
 bool skip_list<K, V>::insert(key_type key, value_type value) {
-  
+   
 }
 
 template<typename K, typename V>
