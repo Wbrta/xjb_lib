@@ -8,6 +8,7 @@ template<typename K, typename V = int>
 struct skip_list_node {
   K key;
   V value;
+  size_t level;
   skip_list_node* forward[1];
 };
 
@@ -18,6 +19,8 @@ protected:
   typedef V value_type;
   typedef skip_list_node<K, V> Node;
   typedef Node* pNode;
+
+  #define NPOS static_cast<pNode>(nullptr)
 public:
   skip_list(int max_level = 15);
   ~skip_list();
@@ -64,7 +67,9 @@ bool skip_list<K, V>::insert(key_type key, value_type value) {
 
 template<typename K, typename V>
 bool skip_list<K, V>::erase(key_type key) {
-
+  bool is_success = erase_once(key);
+  while (erase_once(key));
+  return is_success;
 }
 
 template<typename K, typename V>
@@ -74,12 +79,30 @@ bool skip_list<K, V>::erase_once(key_type key) {
 
 template<typename K, typename V>
 bool skip_list<K, V>::exist(key_type key) {
-
+  if (find(key) == NPOS) return false;
+  else return true;
 }
 
 template<typename K, typename V>
 typename skip_list<K, V>::pNode skip_list<K, V>::find(key_type key) {
-
+  size_t level_now = MAX_LEVEL;
+  pNode target_node = start->forward[level_now - 1];
+  while (target_node < finish) {
+    if (level_now - 1 < 0) {
+      target_node = NPOS;
+      break;
+    }
+    if (target_node->forward[level_now - 1]->key == key) {
+      target_node = target_node->forward[level_now - 1];
+      break;
+    } else if (target_node->forward[level_now - 1]->key < key) {
+      target_node = target_node->forward[level_now - 1];
+    } else {
+      level_now -= 1;
+    }
+  }
+  if (target_node >= finish) target_node = NPOS;
+  return target_node;
 }
 
 template<typename K, typename V>
