@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <iostream>
 
 template<typename K, typename V = int>
 struct skip_list_node {
@@ -34,10 +35,14 @@ public:
   bool exist(key_type key);
 
   pNode find(key_type key);
+  
+  void show();
+  size_t size();
 private:
   pNode start;
   pNode finish;
 
+  size_t __size;
   const size_t MAX_LEVEL;
   
   int random_level();
@@ -49,9 +54,10 @@ skip_list<K, V>::skip_list(int max_level) : MAX_LEVEL(max_level) {
   start = (pNode)malloc(sizeof(Node) + MAX_LEVEL * sizeof(pNode));
   finish = (pNode)malloc(sizeof(Node) + MAX_LEVEL * sizeof(pNode));
   for (int i = 0; i < MAX_LEVEL; ++i)
-    start->forward[i] = NPOS;
+    start->forward[i] = finish;
   for (int i = 0; i < MAX_LEVEL; ++i)
     finish->forward[i] = NPOS;
+  __size = 0;
 }
 
 template<typename K, typename V>
@@ -75,13 +81,14 @@ template<typename K, typename V>
 bool skip_list<K, V>::insert(key_type key, value_type value) {
   pNode insert_node = new_node(key, value);
   if (insert_node == NPOS) return false;
-  pNode* node = &start;
-  for (int i = MAX_LEVEL - 1; i >= 0; --i) {
-    while ((*node)->forward[i] != finish && (*node)->forward[i]->key < key) 
-      *node = (*node)->forward[i];
-    insert_node->forward[i] = (*node)->forward[i];
-    (*node)->forward[i] = insert_node;
+  pNode node = start;
+  for (int i = insert_node->level - 1; i >= 0; --i) {
+    while (node->forward[i] != finish && node->forward[i]->key < key) 
+      node = node->forward[i];
+    insert_node->forward[i] = node->forward[i];
+    node->forward[i] = insert_node;
   }
+  ++__size;
   return true;
 }
 
@@ -94,16 +101,16 @@ bool skip_list<K, V>::erase(key_type key) {
 
 template<typename K, typename V>
 bool skip_list<K, V>::erase_once(key_type key) {
-  if (!exist(key)) return false;
-  pNode willDelete;
-  pNode* node = &start;
-  for (int i = MAX_LEVEL; i >= 0; --i) {  
-    while ((*node)->forward[i] != finish && (*node)->forward[i]->key < key)
-      *node = (*node)->forward[i];
-    willDelete = (*node)->forward[i];
-    (*node)->forward[i] = (*node)->forward[i]->forward[i];
+  pNode willDelete = find(key);
+  if (willDelete == NPOS) return false;
+  pNode node = start;
+  for (int i = willDelete->level - 1; i >= 0; --i) {  
+    while (node->forward[i] != finish && node->forward[i]->key < key)
+      node = node->forward[i];
+    node->forward[i] = node->forward[i]->forward[i];
   }
   free(willDelete);
+  --__size;
   return true;
 }
 
@@ -116,23 +123,53 @@ bool skip_list<K, V>::exist(key_type key) {
 template<typename K, typename V>
 typename skip_list<K, V>::pNode skip_list<K, V>::find(key_type key) {
   size_t level_now = MAX_LEVEL;
-  pNode target_node = start->forward[level_now - 1];
-  while (target_node < finish) {
-    if (level_now - 1 < 0) {
+  pNode target_node = start;
+  while (target_node != finish) {
+    std::cout << "layer " << level_now << ": ";
+    if (level_now < 1) {
       target_node = NPOS;
+      std::cout << "overflow..." << std::endl;
       break;
     }
-    if (target_node->forward[level_now - 1]->key == key) {
+    if (target_node->forward[level_now - 1] == finish && level_now - 1 >= 0) {
+      level_now -= 1;
+      std::cout << "need down..." << std::endl;
+    } else if (target_node->forward[level_now - 1]->key == key) {
       target_node = target_node->forward[level_now - 1];
+      std::cout << "find it!" << std::endl;
       break;
     } else if (target_node->forward[level_now - 1]->key < key) {
       target_node = target_node->forward[level_now - 1];
+      std::cout << "small key..." << std::endl;
     } else {
       level_now -= 1;
+      std::cout << "large key...need down..." << std::endl;
     }
   }
-  if (target_node >= finish) target_node = NPOS;
+  if (target_node == finish) target_node = NPOS;
   return target_node;
+}
+
+template<typename K, typename V>
+void skip_list<K, V>::show() {
+  for (int i = MAX_LEVEL - 1; i >= 0; --i) {
+    pNode node = start;
+    while (node != finish) {
+      if (node == start) {
+        std::cout << "start";
+      } else {
+        std::cout << node->key;
+      }
+      std::cout << " ---> ";
+      node = node->forward[i];
+    }
+    std::cout << "finish" << std::endl;
+  }
+}
+
+template<typename K, typename V>
+size_t skip_list<K, V>::size() {
+  return __size;
 }
 
 template<typename K, typename V>
