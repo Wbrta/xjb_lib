@@ -75,8 +75,8 @@ template<typename K, typename V>
 bool skip_list<K, V>::insert(key_type key, value_type value) {
   pNode insert_node = new_node(key, value);
   if (insert_node == NPOS) return false;
-  for (int i = 0; i < MAX_LEVEL; ++i) {
-    pNode* node = &start;
+  pNode* node = &start;
+  for (int i = MAX_LEVEL - 1; i >= 0; --i) {
     while ((*node)->forward[i] != finish && (*node)->forward[i]->key < key) 
       *node = (*node)->forward[i];
     insert_node->forward[i] = (*node)->forward[i];
@@ -96,8 +96,8 @@ template<typename K, typename V>
 bool skip_list<K, V>::erase_once(key_type key) {
   if (!exist(key)) return false;
   pNode willDelete;
-  for (int i = 0; i < MAX_LEVEL; ++i) {
-    pNode* node = &start;
+  pNode* node = &start;
+  for (int i = MAX_LEVEL; i >= 0; --i) {  
     while ((*node)->forward[i] != finish && (*node)->forward[i]->key < key)
       *node = (*node)->forward[i];
     willDelete = (*node)->forward[i];
