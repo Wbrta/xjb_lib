@@ -105,7 +105,7 @@ bool skip_list<K, V>::erase_once(key_type key) {
   if (willDelete == NPOS) return false;
   pNode node = start;
   for (int i = willDelete->level - 1; i >= 0; --i) {  
-    while (node->forward[i] != finish && node->forward[i]->key < key)
+    while (node->forward[i] != finish && node->forward[i] != willDelete)
       node = node->forward[i];
     node->forward[i] = node->forward[i]->forward[i];
   }
@@ -125,25 +125,19 @@ typename skip_list<K, V>::pNode skip_list<K, V>::find(key_type key) {
   size_t level_now = MAX_LEVEL;
   pNode target_node = start;
   while (target_node != finish) {
-    std::cout << "layer " << level_now << ": ";
     if (level_now < 1) {
       target_node = NPOS;
-      std::cout << "overflow..." << std::endl;
       break;
     }
     if (target_node->forward[level_now - 1] == finish && level_now - 1 >= 0) {
       level_now -= 1;
-      std::cout << "need down..." << std::endl;
     } else if (target_node->forward[level_now - 1]->key == key) {
       target_node = target_node->forward[level_now - 1];
-      std::cout << "find it!" << std::endl;
       break;
     } else if (target_node->forward[level_now - 1]->key < key) {
       target_node = target_node->forward[level_now - 1];
-      std::cout << "small key..." << std::endl;
     } else {
       level_now -= 1;
-      std::cout << "large key...need down..." << std::endl;
     }
   }
   if (target_node == finish) target_node = NPOS;
