@@ -35,6 +35,7 @@ public:
   bool exist(key_type key);
 
   pNode find(key_type key);
+  V get(key_type key);
   
   void show();
   size_t size();
@@ -142,6 +143,12 @@ typename skip_list<K, V>::pNode skip_list<K, V>::find(key_type key) {
   }
   if (target_node == finish) target_node = NPOS;
   return target_node;
+}
+
+template<typename K, typename V>
+V skip_list<K, V>::get(key_type key) {
+  pNode node = find(key);
+  return node->value;
 }
 
 template<typename K, typename V>
