@@ -1,7 +1,7 @@
 #include "skip_list.h"
 
 int main() {
-  skip_list<int> sl;
+  wiklvrain::skip_list<int> sl;
   sl.insert(10);
   sl.insert(2);
   sl.insert(10);

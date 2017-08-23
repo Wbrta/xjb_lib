@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <iostream>
 
+namespace wiklvrain {
+
 template<typename K, typename V = int>
 struct skip_list_node {
   K key;
@@ -191,4 +193,5 @@ typename skip_list<K, V>::pNode skip_list<K, V>::new_node(K key, V value) {
   return node;
 }
 
+}
 #endif
