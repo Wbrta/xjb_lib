@@ -1,6 +1,7 @@
 #ifndef RED_BLACK_TREE_H
 #define RED_BLACK_TREE_H
 
+#include <utility>
 #include <initializer_list>
 
 namespace wiklvrain {
@@ -27,7 +28,7 @@ struct rb_tree_node {
 
 template<typename K, typename V = int>
 class rb_tree {
-protected;
+protected:
   typedef K key_type;
   typedef V value_type;
   typedef rb_tree_node<K, V> Node;
@@ -36,8 +37,8 @@ public:
   rb_tree();
   rb_tree(key_type key);
   rb_tree(key_type key, value_type value);
-  rb_tree(initializer_list<key_type> ilk);
-  rb_tree(initializer_list<pair<key_type, value_type>> ilkv);
+  rb_tree(std::initializer_list<key_type> ilk);
+  rb_tree(std::initializer_list<std::pair<key_type, value_type>> ilkv);
   
   ~rb_tree();
   
@@ -53,7 +54,6 @@ private:
 
   pNode root;
 };
-}
 
 template<typename K, typename V>
 rb_tree<K, V>::rb_tree() {
@@ -71,13 +71,13 @@ rb_tree<K, V>::rb_tree(key_type key, value_type value) {
 }
 
 template<typename K, typename V>
-rb_tree<K, V>::rb_tree(initializer_list<key_type> ilk) {
+rb_tree<K, V>::rb_tree(std::initializer_list<key_type> ilk) {
   for (auto it = ilk.begin(); it != ilk.end(); ++it) 
     insert(*it);
 }
 
 template<typename K, typename V>
-rb_tree<K, V>::rb_tree(initializer_list<pair<key_type, value_type>> ilk) {
+rb_tree<K, V>::rb_tree(std::initializer_list<std::pair<key_type, value_type>> ilk) {
   for (auto it = ilk.begin(); it != ilk.end(); ++it) 
     insert((*it).first, (*it).second);
 }
@@ -114,7 +114,7 @@ typename rb_tree<K, V>::pNode rb_tree<K, V>::find(key_type key) {
 
 template<typename K, typename V>
 void rb_tree<K, V>::left_rotate(pNode _node) {
-  pNode _parent = node->parent;
+  pNode _parent = _node->parent;
   if (_parent->parent->left == _parent) {
     _parent->parent->left = _node;
   } else {
@@ -140,5 +140,7 @@ void rb_tree<K, V>::right_rotate(pNode _node) {
   _node->right->parent = _parent;
   _node->right = _parent;
   _parent->parent = _node;
+}
+
 }
 #endif
