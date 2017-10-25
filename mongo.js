@@ -1,8 +1,20 @@
 var key = [];
 var value_type = [];
-var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var db_url = "mongodb://localhost:27017/test";
 var mongo_client = require('mongodb').MongoClient;
+
+var byte_range = function(first, last) {
+  var cur = 0;
+  var list = [];
+  for (var i = first; i <= last; ++i) 
+    list[cur++] = i;
+  return list;
+}
+
+var tmp = byte_range(0xC2, 0xF4);
+var first_values = byte_range(0x00, 0x7F);
+first_values.push.apply(first_values, tmp);
+var trailing_values = byte_range(0x80, 0xBF);
 
 var get_rand_int = function(min, base) {
 	return min + Math.ceil(Math.random() * base);
@@ -10,11 +22,55 @@ var get_rand_int = function(min, base) {
 var get_rand_float = function(base) {
 	return Math.random() * base;
 }
+var random_choice = function(array) {
+  var index = Math.floor((Math.random() * array.length));
+  return array[index];
+}
+var random_utf8_seq = function() {
+  var first = random_choice(first_values);
+  if (first <= 0x7F) {
+    return [first];
+  } else if (first <= 0xDF) {
+    return [first, random_choice(trailing_values)];
+  } else if (first == 0xE0) {
+    return [first, random_choice(byte_range(0xA0, 0xBF)), random_choice(trailing_values)];
+  } else if (first == 0xED) {
+    return [first, random_choice(byte_range(0x80, 0x9F)), random_choice(trailing_values)];
+  } else if (first <= 0xEF) {
+    return [first, random_choice(trailing_values), random_choice(trailing_values)];
+  } else if (first == 0xF0) {
+    return [first, random_choice(byte_range(0x90, 0xBF)), random_choice(trailing_values), random_choice(trailing_values)];
+  } else if (first <= 0xF3) {
+    return [first, random_choice(trailing_values), random_choice(trailing_values), random_choice(trailing_values)];
+  } else if (first == 0xF4) {
+    return [first, random_choice(byte_range(0x80, 0x8F)), random_choice(trailing_values), random_choice(trailing_values)];
+  }
+}
 var get_rand_string = function(len) {
-	var str = "";
-	for (var i = 0; i < len; ++i) 
-		str += alphabet[get_rand_int(0, 25)];
-	return str;
+  var string = "";
+  for (var i = 0; i < len; ++i) {
+    var str = '';
+    var a = random_utf8_seq();
+    for (var j = 0; j < a.length; ++j) {
+      str += '%' + ('0' + a[j].toString(16)).slice(-2);
+    }
+    try {
+      str = decodeURIComponent(str);
+      if (str == null) str = "null";
+      else if (str == undefined) str = "undefined";
+      else if (str == "") str = "empty";
+      else if (str == ".") str = "point";
+      else if (str == " ") str = "blank";
+      else if (str == "$") str = "doller";
+      else if (str == "/") str = "left";
+      else if (str == "\\") str = "right";
+      else if (str == '\0') str = "0";
+    } catch(err) {
+      str = "error";
+    }
+    string += str;
+  }
+  return string;
 }
 var get_rand_object = function() {
 	var ret = {};
@@ -30,8 +86,9 @@ var get_date = function() {
 var Insert = function(db, isIndex) {
 	var len = get_rand_int(1, 5);
 	for (var i = 0; i < len; ++i) {
-		key[i] = get_rand_string(get_rand_int(8, 120));
+		key[i] = get_rand_string(get_rand_int(2, 30));
 		value_type[i] = get_rand_int((i == 0 ? 1 : 0), 5);
+    console.log(key[i]);
 	}
 	var datas = [];
 	len = get_rand_int(1, 5);
@@ -52,6 +109,7 @@ var Insert = function(db, isIndex) {
 	collection.insert(datas, function(err, result) {
 		if (err) {
 			console.log('Error: ' + err);
+      db.close();
 			return;
 		}
 		if (!isIndex) {
