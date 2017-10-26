@@ -1,7 +1,33 @@
 var key = [];
 var value_type = [];
+var fs = require('fs');
 var db_url = "mongodb://localhost:27017/test";
 var mongo_client = require('mongodb').MongoClient;
+
+var argc = 0;
+var argv = [];
+var key_num = 2;
+var data_num = 5;
+var type = "query";
+var isIndex = false;
+var file_path = null;
+
+process.argv.forEach(function (val, index, array) {
+  argv[argc] = val;
+  argc += 1;
+});
+
+for (var i = 2; i < argc; ++i) {
+  if (argv[i] == "query") type = "query";
+  else if (argv[i] == "help") type = "help";
+  else if (argv[i] == "insert") type = "insert";
+  else if (argv[i] == "update") type = "update";
+  else if (argv[i] == "delete") type = "delete";
+  else if (argv[i] == "with_index") isIndex = true;
+  else if (argv[i].substring(0, 11) == "key_number=") key_num = paserInt(argv[i].substring(11));
+  else if (argv[i].substring(0, 12) == "data_number=") data_num = paserInt(argv[i].substring(12));
+  else if (argv[i].substring(0, 5) == "from=") file_path = argv[i].substring(5);
+}
 
 var byte_range = function(first, last) {
   var cur = 0;
@@ -83,18 +109,15 @@ var get_date = function() {
   var time = new Date().toLocaleString();
   return time;
 }
-var Insert = function(db, isIndex) {
-  var len = get_rand_int(1, 5);
-  for (var i = 0; i < len; ++i) {
+var get_rand_data = function(knum, dnum) {
+  for (var i = 0; i < knum; ++i) {
     key[i] = get_rand_string(get_rand_int(2, 30));
     value_type[i] = get_rand_int((i == 0 ? 1 : 0), 5);
-    console.log(key[i]);
   }
   var datas = [];
-  len = get_rand_int(1, 5);
-  for (var cur = 0; cur < len; ++cur) {
+  for (var cur = 0; cur < dnum; ++cur) {
     var data = {};
-    for (var i = 0; i < key.length; ++i) {
+    for (var i = 0; i < knum; ++i) {
       var rand = value_type[i];
       if (rand == 0) data[key[i]] = get_rand_object();
       else if (rand == 1) data[key[i]] = get_rand_int(0, 1e9 + 7);
@@ -104,7 +127,33 @@ var Insert = function(db, isIndex) {
     }
     datas[cur] = data;
   }
-
+  return datas;
+}
+var get_data_from_json = function(knum, dnum) {
+  var data = null;
+  try {
+    data = fs.readFileSync(file_path);
+  } catch(err) {
+    throw err;
+  }
+  var cur = 0;
+  var datas = [];
+  var json = JSON.parse(data.toString());
+  return json;
+  for (var i in json) {
+    datas[cur++] = json[i];
+    if (cur >= dnum) break;
+  }
+  return datas;
+}
+var Insert = function(db, isIndex, knum, dnum, get_data) {
+  try {
+    datas = get_data(knum, dnum);
+  } catch(err) {
+    console.log(err);
+    return;
+  }
+  console.log(datas);
   var collection = db.collection('test');
   collection.insert(datas, function(err, result) {
     if (err) {
@@ -181,11 +230,31 @@ var Update = function(db, key = null, value = null) {
   }, key);
 }
 
+var show_help = function() {
+  console.log("Usage: node " + argv[1] + " [options]");
+  console.log("");
+  console.log("query           设定此选项以使程序查询 MongoDB 中的指定数据或所有数据");
+  console.log("insert          设定此选项以使程序向 MongoDB 中插入指定数据或随机数据");
+  console.log("update          设定此选项以使程序更新 MongoDB 中指定的数据或所有数据");
+  console.log("delete          设定此选项以使程序删除 MongoDB 中指定的数据或所有数据");
+  console.log("");
+  console.log("insert options: ");
+  console.log("以下选项仅当设定选项 insert 之后启用，其他时候无效");
+  console.log("with_index      设定此选项使插入数据后构造索引（仅当插入的表中没有数据时构建）");
+  console.log("key_number=     设定此选项并给出一个整数表示每条数据包含的 key 的数目");
+  console.log("data_number=    设定此选项并给出一个整数表示具体插入的数据条数");
+  console.log("from=           设定此选项并给出一个路径名表示包含 key-value 的 JSON 文件，设定此选项则key_number选项无效");
+}
+
 var main = function(type, index = false, key = null) {
   mongo_client.connect(db_url, function(err, db) {
     if (!err) console.log("连接成功");
     if (type == "insert") {
-      Insert(db, index);
+      if (file_path == null) {
+        Insert(db, index, key_num, data_num, get_rand_data);
+      } else {
+        Insert(db, index, key_num, data_num, get_data_from_json);
+      }
     } else if (type == "query") {
       Query(db, function(result) {
         for (var i = 0; i < result.length; ++i) {
@@ -197,30 +266,12 @@ var main = function(type, index = false, key = null) {
       Delete(db, key);
     } else if (type == "update") {
       Update(db);
+    } else if (type == "help") {
+      show_help();
     } else {
       console.log("function argument wrong");
     }
   });
-};
-
-var argc = 0;
-var argv = [];
-var type = "query";
-
-process.argv.forEach(function (val, index, array) {
-  argv[argc] = val;
-  argc += 1;
-});
-
-if (argc != 3) {
-  console.log("Usage: node " + argv[1] + " [options]");
-  console.log("query   use this options to make program query data in mongodb");
-  console.log("insert  use this options to make program insert data into mongodb");
-  console.log("update  use this options to make program update data in mongodb");
-  console.log("delete  use this options to delete data from mongodb");
-  process.exit(1);
 }
 
-type = argv[2];
-
-main(type);
+main(type, isIndex);
