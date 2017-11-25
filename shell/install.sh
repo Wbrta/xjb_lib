@@ -8,6 +8,7 @@ if [ "$systemInfo" = "Ubuntu" ]; then
   sudo apt-get install -y g++ cmake libbz2-dev libaio-dev bison zlib1g-dev libsnappy-dev
   sudo apt-get install -y libgflags-dev libreadline6-dev libncurses5-dev libssl-dev liblz4-dev gdb git
   sudo apt-get install -y build-essential python-pip python-dev python3-dev
+  sudo apt-get install -y openjdk-8-jdk
 else
   sudo yum -y upgrade
   sudo yum install -y gcc-g++ cmake gdb libssl-devel git
@@ -34,23 +35,13 @@ if [ ! -f "/etc/shadowsocks.json" ]; then
   \"server_port\":$shadowsocks_port,\n \
   \"local_address\":\"127.0.0.1\",\n \
   \"local_port\":1080,\n \
-  \"password\":\"$shadowsocks_password\", \
+  \"password\":\"$shadowsocks_password\",\n \
   \"timeout\":600,\n \
   \"method\":\"aes-256-cfb\",\n \
   \"fast-open\":false,\n \
   \"workers\":1\n \
-  }" > /etc/shadowsocks.json
+}" > /etc/shadowsocks.json
 fi
-
-# install boost
-if [ ! -f boost_1_64_0.tar.bz2 ]; then
-  wget https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2
-fi
-tar jxvf boost_1_64_0.tar.bz2
-cd boost_1_64_0
-./bootstrap.sh
-./b2 install
-cd ..
 
 # install ubuntu themes and clean
 if [ "$systemInfo" = "Ubuntu" -a ! -f "/usr/share/doc/ultra-flat-icons" ]; then
@@ -84,6 +75,16 @@ if [ "$systemInfo" = "Ubuntu" -a ! -f "/usr/bin/typora" ]; then
   sudo apt-get update -y
   sudo apt-get install -y typora
 fi
+
+# install boost
+if [ ! -f boost_1_64_0.tar.bz2 ]; then
+  wget https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2
+fi
+tar jxvf boost_1_64_0.tar.bz2
+cd boost_1_64_0
+./bootstrap.sh
+./b2 install
+cd ..
 
 # emmm...
 
