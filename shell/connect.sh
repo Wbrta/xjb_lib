@@ -1,5 +1,30 @@
 #!/bin/bash
 
+# Use this file to connect the other hosts
+# If you want to use it, please specify ~/.CONNECT_HOST like this:
+# [GroupName]
+# username host_ip
+# blank line for the group end
+# 
+# Examples:
+# [spark]
+# root 10.198.255.194
+# root 10.198.255.195
+# root 10.198.255.196
+# root 10.198.255.197
+# root 10.198.255.198
+# root 10.198.255.199
+# root 10.198.255.200
+# root 10.198.255.201
+# root 10.198.255.202
+# root 10.198.255.203
+#
+# [sparkonk8s]
+# root 172.21.51.42
+# root 10.198.21.134 
+#
+# EOF
+
 FILE_NOT_EXIST=-1
 PARAMETER_LOSS=-2
 
