@@ -22,6 +22,9 @@ Here are the lists:</br>
 | py/peppa_pig.py | draw a peppa pig but only have head | 2018.5.8 |
 | shell/install.sh | install some software or lib quickly in linux | 2017.11.25 |
 | shell/connect.sh | connect host easily | 2018.7.15 |
+| work/generate_email_erp_passwd.py | generate my email and erp password for jd | 2018.10.19 |
+| work/get_shuffle_read_time | get spark shuffle read time from history server | 2018.10.19 |
+| work/get_shuffle_write_time | get spark shuffle write time from history server | 2018.10.19 |
 
 ## Others
 The `test` folder is a test folder.</br>
